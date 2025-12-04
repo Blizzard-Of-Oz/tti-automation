@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.sqlite3
+.env
+.venv/
+venv/
+ENV/
+env/
+
+# IDEs
+.vscode/
+.idea/
+
+# Migrations cache
+alembic.ini.bak
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
