@@ -90,7 +90,7 @@ The goal is to replace manual CVE tracking in Excel and email with a repeatable,
 - [X] Phase 2 – Database design and PostgreSQL setup
 - [X] Phase 3 – Backend skeleton (FastAPI)
 - [X] Phase 4 – NVD CVE ingestion and storage
-- [ ] Phase 5 – Vendor advisory scraping
+- [X] Phase 5 – Vendor advisory scraping
 - [ ] Phase 6 – Client inventory module
 - [ ] Phase 7 – Matching engine
 - [ ] Phase 8 – Enrichment and LLM summaries
