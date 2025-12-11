@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db
 from .. import models, schemas
+from .. import matching
 
 router = APIRouter(
     prefix="/clients",
@@ -199,3 +200,26 @@ def list_software_for_asset(asset_id: int, db: Session = Depends(get_db)):
         .all()
     )
     return software
+
+
+@router.post(
+    "/{client_id}/match_vulnerabilities",
+    response_model=schemas.ClientMatchResult,
+)
+def match_vulnerabilities_for_client(client_id: int, db: Session = Depends(get_db)):
+    client = db.query(models.Client).filter(models.Client.id == client_id).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+
+    try:
+        stats = matching.match_client_vulnerabilities(db, client_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+    return schemas.ClientMatchResult(
+        client_id=client_id,
+        assets_seen=stats["assets_seen"],
+        software_seen=stats["software_seen"],
+        matches_created=stats["matches_created"],
+        matches_skipped_existing=stats["matches_skipped_existing"],
+    )

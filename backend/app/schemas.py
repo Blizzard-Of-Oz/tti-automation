@@ -93,3 +93,11 @@ class AssetWithSoftware(AssetRead):
 class ClientDetail(ClientRead):
     contacts: List[ClientContactRead] = []
     assets: List[AssetWithSoftware] = []
+
+
+class ClientMatchResult(BaseModel):
+    client_id: int
+    assets_seen: int
+    software_seen: int
+    matches_created: int
+    matches_skipped_existing: int
