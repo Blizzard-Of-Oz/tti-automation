@@ -92,7 +92,7 @@ The goal is to replace manual CVE tracking in Excel and email with a repeatable,
 - [X] Phase 4 – NVD CVE ingestion and storage
 - [X] Phase 5 – Vendor advisory scraping
 - [X] Phase 6 – Client inventory module
-- [ ] Phase 7 – Matching engine
+- [X] Phase 7 – Matching engine
 - [ ] Phase 8 – Enrichment and LLM summaries
 - [ ] Phase 9 – Email advisory generation and routing
 - [ ] Phase 10 – Scheduling and automation
