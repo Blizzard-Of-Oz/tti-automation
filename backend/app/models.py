@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import (
+    Column,
     String,
     Integer,
     DateTime,
@@ -159,6 +160,17 @@ class ClientVulnerability(Base):
     vulnerability_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("vulnerabilities.id"), nullable=False, index=True
     )
+    asset_id: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        nullable=True,
+        index=True,
+    )
+    software_id: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        nullable=True,
+        index=True,
+    )
+
     impact_level: Mapped[Optional[str]] = mapped_column(String(20))  # LOW/MEDIUM/HIGH/CRITICAL
     status: Mapped[str] = mapped_column(String(20), default="new")  # new, notified, remediated, ignored
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

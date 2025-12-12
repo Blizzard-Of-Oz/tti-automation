@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from ..db import get_db
 from .. import models, schemas
 from .. import matching
+from .. import email_builder
 
 router = APIRouter(
     prefix="/clients",
@@ -223,3 +224,34 @@ def match_vulnerabilities_for_client(client_id: int, db: Session = Depends(get_d
         matches_created=stats["matches_created"],
         matches_skipped_existing=stats["matches_skipped_existing"],
     )
+
+@router.post(
+    "/{client_id}/generate_advisory_email",
+    response_model=schemas.ClientAdvisoryResponse,
+)
+def generate_advisory_email_for_client(client_id: int, db: Session = Depends(get_db)):
+    # Ensure client exists (nice 404 instead of generic error)
+    client = db.query(models.Client).filter(models.Client.id == client_id).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+
+    payload = email_builder.build_client_advisory_email(db, client_id)
+    stats_dict = payload.get("stats", {})
+
+    stats = schemas.AdvisoryStats(
+        total=stats_dict.get("total", 0),
+        critical=stats_dict.get("critical", 0),
+        high=stats_dict.get("high", 0),
+        medium=stats_dict.get("medium", 0),
+        low=stats_dict.get("low", 0),
+    )
+
+    return schemas.ClientAdvisoryResponse(
+        client_id=client_id,
+        email_log_id=None,  # not persisted yet
+        subject=payload["subject"],
+        body_html=payload["body_html"],
+        body_text=payload["body_text"],
+        stats=stats,
+    )
+

@@ -101,3 +101,20 @@ class ClientMatchResult(BaseModel):
     software_seen: int
     matches_created: int
     matches_skipped_existing: int
+
+
+class AdvisoryStats(BaseModel):
+    total: int
+    critical: int
+    high: int
+    medium: int
+    low: int
+
+
+class ClientAdvisoryResponse(BaseModel):
+    client_id: int
+    email_log_id: Optional[int] = None  # we are not logging to DB (for now)
+    subject: str
+    body_html: str
+    body_text: str
+    stats: AdvisoryStats
