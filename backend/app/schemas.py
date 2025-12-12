@@ -118,3 +118,5 @@ class ClientAdvisoryResponse(BaseModel):
     body_html: str
     body_text: str
     stats: AdvisoryStats
+    to_recipients: List[str]
+    cc_recipients: List[str]

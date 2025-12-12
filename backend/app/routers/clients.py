@@ -229,12 +229,16 @@ def match_vulnerabilities_for_client(client_id: int, db: Session = Depends(get_d
     "/{client_id}/generate_advisory_email",
     response_model=schemas.ClientAdvisoryResponse,
 )
-def generate_advisory_email_for_client(client_id: int, db: Session = Depends(get_db)):
-    # Ensure client exists (nice 404 instead of generic error)
+def generate_advisory_email_for_client(
+    client_id: int,
+    db: Session = Depends(get_db),
+):
+    # 1) Make sure client exists
     client = db.query(models.Client).filter(models.Client.id == client_id).first()
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
 
+    # 2) Build the advisory content + stats (from email_builder)
     payload = email_builder.build_client_advisory_email(db, client_id)
     stats_dict = payload.get("stats", {})
 
@@ -246,12 +250,39 @@ def generate_advisory_email_for_client(client_id: int, db: Session = Depends(get
         low=stats_dict.get("low", 0),
     )
 
+    # 3) Resolve routing from client contacts
+    contacts = (
+        db.query(models.ClientContact)
+        .filter(models.ClientContact.client_id == client_id)
+        .order_by(models.ClientContact.id)
+        .all()
+    )
+
+    to_recipients: List[str] = []
+    cc_recipients: List[str] = []
+
+    if contacts:
+        primary_emails = [c.email for c in contacts if getattr(c, "is_primary", False)]
+
+        # If there are primary contacts → send TO them, CC the rest
+        if primary_emails:
+            to_recipients = primary_emails
+            cc_recipients = [
+                c.email for c in contacts if c.email not in to_recipients
+            ]
+        else:
+            # No primary flag → everybody in TO
+            to_recipients = [c.email for c in contacts]
+
+    # 4) Return full response (still not sending the email yet)
     return schemas.ClientAdvisoryResponse(
         client_id=client_id,
-        email_log_id=None,  # not persisted yet
+        email_log_id=None,  # still just preview, no persistence yet
         subject=payload["subject"],
         body_html=payload["body_html"],
         body_text=payload["body_text"],
         stats=stats,
+        to_recipients=to_recipients,
+        cc_recipients=cc_recipients,
     )
 

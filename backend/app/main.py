@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from .db import get_db
 from .routers import clients as clients_router
+from .routers import dashboard as dashboard_router
 
 app = FastAPI(
     title="TTI Automation API",
@@ -11,7 +12,9 @@ app = FastAPI(
     version="0.1.0",
 )
 
+# Routers
 app.include_router(clients_router.router)
+app.include_router(dashboard_router.router)
 
 
 @app.get("/health")

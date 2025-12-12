@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Dict, List, Tuple, Any, Optional
 
 from jinja2 import Template
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 
 from . import models
 
@@ -127,11 +127,42 @@ def _pick_reference_url(vuln: models.Vulnerability) -> Tuple[Optional[str], Opti
 
     return None, None
 
+
+def _resolve_recipients_for_client(client: models.Client) -> Tuple[List[str], List[str]]:
+    """
+    Build To / CC recipient lists from whatever fields the Client model has.
+
+    Tries (in order): primary_contact_email, primary_email, email for the main "To".
+    For CC, looks at 'cc_emails' which can be a comma-separated string or a list.
+    """
+    to_emails: List[str] = []
+    cc_emails: List[str] = []
+
+    primary_email = (
+        getattr(client, "primary_contact_email", None)
+        or getattr(client, "primary_email", None)
+        or getattr(client, "email", None)
+    )
+    if primary_email:
+        to_emails.append(primary_email)
+
+    raw_cc = getattr(client, "cc_emails", None)
+    if isinstance(raw_cc, str):
+        cc_emails = [e.strip() for e in raw_cc.split(",") if e.strip()]
+    elif isinstance(raw_cc, list):
+        cc_emails = [e for e in raw_cc if isinstance(e, str) and e.strip()]
+
+    return to_emails, cc_emails
+
+
 def build_client_advisory_email(db: Session, client_id: int) -> Dict[str, Any]:
     # Load client
     client = db.query(models.Client).filter(models.Client.id == client_id).first()
     if not client:
         raise ValueError("Client not found")
+
+    # Who should receive this advisory?
+    to_recipients, cc_recipients = _resolve_recipients_for_client(client)
 
     # All open matches for this client
     matches = (
@@ -198,7 +229,6 @@ def build_client_advisory_email(db: Session, client_id: int) -> Dict[str, Any]:
             }
         )
 
-
     # Compute stats for the header
     stats = _summarise_severity(items)
     generated_at = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
@@ -246,4 +276,7 @@ def build_client_advisory_email(db: Session, client_id: int) -> Dict[str, Any]:
         "body_text": text_body,
         "stats": stats,
         "items_count": len(items),
+        "to_recipients": to_recipients,
+        "cc_recipients": cc_recipients,
     }
+
