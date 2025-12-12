@@ -160,13 +160,13 @@ pip install -r requirements.txt
 
 ### 2.2. PostgreSQL
 
-# Create DB and user (only needed on a fresh install):
+## Create DB and user (only needed on a fresh install):
 
 CREATE DATABASE tti_db;
 CREATE USER tti_user WITH PASSWORD 'strongpassword';
 GRANT ALL PRIVILEGES ON DATABASE tti_db TO tti_user;
 
-# Check that backend/app/db.py points to the same database, for example:
+## Check that backend/app/db.py points to the same database, for example:
 
 DATABASE_URL = "postgresql+psycopg2://tti_user:strongpassword@localhost/tti_db"
 Run migrations if you use Alembic, or create tables via SQLAlchemy as already configured in the project.
@@ -182,7 +182,7 @@ Open:
 
 ## 4. Data flow (end-to-end)
 
-# This is the logical flow from CVE ingestion to advisory email.
+## This is the logical flow from CVE ingestion to advisory email.
 
 ### 4.1. Ingest CVEs from NVD
 
@@ -306,13 +306,13 @@ This endpoint backs any future UI/dashboard without changing the backend.
 ## 5. Automation (cron)
 On the VPS, the full nightly pipeline is wired into crontab:
 
-# 1) NVD CVE ingest — every night at 01:00
+### 1) NVD CVE ingest — every night at 01:00
 0 1 * * * cd /home/kali/tti-automation && /home/kali/tti-automation/venv/bin/python -m scripts.nvd_ingest >> /home/kali/tti-automation/logs/nvd_ingest.log 2>&1
-# 2) Vendor advisory / reference enrichment — 01:15
+### 2) Vendor advisory / reference enrichment — 01:15
 15 1 * * * cd /home/kali/tti-automation && /home/kali/tti-automation/venv/bin/python -m scripts.vendor_reference_enrich >> /home/kali/tti-automation/logs/vendor_reference_enrich.log 2>&1
-# 3) LLM enrichment — 01:30
+### 3) LLM enrichment — 01:30
 30 1 * * * cd /home/kali/tti-automation && /home/kali/tti-automation/venv/bin/python -m scripts.llm_enrich >> /home/kali/tti-automation/logs/llm_enrich.log 2>&1
-# 4) Refresh all clients (re-run matching) — 06:00
+### 4) Refresh all clients (re-run matching) — 06:00
 0 6 * * * cd /home/kali/tti-automation && /home/kali/tti-automation/venv/bin/python -m scripts.refresh_all_clients >> /home/kali/tti-automation/logs/refresh_all_clients.log 2>&1
 
 Effect:
